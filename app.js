@@ -1,4 +1,4 @@
-// ZoomInfo Account Dashboard JavaScript with Password Protection, Tabs, and Multi-Select
+// ZoomInfo Account Dashboard JavaScript with Enhanced UX
 class AccountDashboard {
     constructor() {
         this.accounts = [];
@@ -14,6 +14,153 @@ class AccountDashboard {
     init() {
         this.checkAuthentication();
         this.setupLoginEventListeners();
+        this.addCustomStyles(); // Add our enhanced styles
+    }
+
+    // Add custom styles for smooth transitions and interactive effects
+    addCustomStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Smooth page transitions */
+            .login-container, #dashboardContainer {
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                           opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                transform-origin: center center;
+            }
+            
+            .slide-out-left {
+                transform: translateX(-100%) scale(0.95);
+                opacity: 0;
+            }
+            
+            .slide-in-right {
+                transform: translateX(100%) scale(0.95);
+                opacity: 0;
+            }
+            
+            .slide-in-active {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            
+            /* Enhanced table row hover effects */
+            .data-table tbody tr {
+                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                cursor: pointer;
+                position: relative;
+            }
+            
+            .data-table tbody tr:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 33, 128, 141), 0.1);
+                background-color: var(--color-bg-1);
+                border-radius: var(--radius-sm);
+            }
+            
+            .data-table tbody tr:active {
+                transform: translateY(0);
+                transition-duration: 0.1s;
+            }
+            
+            /* Toast notification styles */
+            .toast {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: var(--space-16) var(--space-20);
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-base);
+                box-shadow: var(--shadow-lg);
+                transform: translateX(400px);
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                z-index: 10000;
+                max-width: 300px;
+                font-size: var(--font-size-sm);
+            }
+            
+            .toast--show {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            
+            .toast--success {
+                border-left: 4px solid var(--color-success);
+            }
+            
+            .toast--error {
+                border-left: 4px solid var(--color-error);
+            }
+            
+            .toast--info {
+                border-left: 4px solid var(--color-info);
+            }
+            
+            /* Loading state improvements */
+            .loading-indicator {
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                color: var(--color-primary);
+                font-size: var(--font-size-sm);
+            }
+            
+            .loading-indicator::before {
+                content: '';
+                width: 16px;
+                height: 16px;
+                border: 2px solid var(--color-primary);
+                border-top: 2px solid transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            
+            /* Pulse effect for new data */
+            .table-row-new {
+                animation: pulse 0.6s ease-in-out;
+            }
+            
+            @keyframes pulse {
+                0% { background-color: rgba(var(--color-success-rgb, 33, 128, 141), 0.1); }
+                50% { background-color: rgba(var(--color-success-rgb, 33, 128, 141), 0.2); }
+                100% { background-color: transparent; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Toast notification system
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast--${type}`;
+        toast.innerHTML = `
+            <div style="font-weight: var(--font-weight-medium); margin-bottom: var(--space-4);">
+                ${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'} ${type.charAt(0).toUpperCase() + type.slice(1)}
+            </div>
+            <div>${message}</div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Trigger show animation
+        requestAnimationFrame(() => {
+            toast.classList.add('toast--show');
+        });
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            toast.classList.remove('toast--show');
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        }, 4000);
     }
 
     checkAuthentication() {
@@ -28,23 +175,26 @@ class AccountDashboard {
     }
 
     showLogin() {
-        // Remove hidden class instead of setting display style
         const loginScreen = document.getElementById('loginScreen');
-        if (loginScreen) {
-            loginScreen.classList.remove('hidden');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        
+        if (dashboardContainer && !dashboardContainer.classList.contains('hidden')) {
+            // Animate dashboard out
+            dashboardContainer.classList.add('slide-out-left');
+            setTimeout(() => {
+                dashboardContainer.classList.add('hidden');
+                dashboardContainer.classList.remove('slide-out-left');
+            }, 400);
         }
         
-        const dashboardContainer = document.getElementById('dashboardContainer');
-        if (dashboardContainer) {
-            dashboardContainer.classList.add('hidden');
-        }
-    }
-
-    createLoginScreen() {
-        // Login screen is already in HTML, just make sure it exists
-        const loginScreen = document.getElementById('loginScreen');
         if (loginScreen) {
             loginScreen.classList.remove('hidden');
+            loginScreen.classList.add('slide-in-right');
+            
+            requestAnimationFrame(() => {
+                loginScreen.classList.remove('slide-in-right');
+                loginScreen.classList.add('slide-in-active');
+            });
         }
     }
 
@@ -66,12 +216,15 @@ class AccountDashboard {
         if (password === correctPassword) {
             sessionStorage.setItem('dashboardAuth', 'true');
             this.isAuthenticated = true;
+            this.showToast('Welcome to ZoomInfo Dashboard!', 'success');
             this.showDashboard();
         } else {
             const errorDiv = document.getElementById('loginError');
             errorDiv.classList.remove('hidden');
             passwordField.value = '';
             passwordField.focus();
+            
+            this.showToast('Incorrect password. Please try again.', 'error');
 
             // Hide error after 3 seconds
             setTimeout(() => {
@@ -82,13 +235,26 @@ class AccountDashboard {
 
     showDashboard() {
         const loginScreen = document.getElementById('loginScreen');
-        if (loginScreen) {
-            loginScreen.classList.add('hidden');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        
+        // Animate login screen out
+        if (loginScreen && !loginScreen.classList.contains('hidden')) {
+            loginScreen.classList.add('slide-out-left');
+            setTimeout(() => {
+                loginScreen.classList.add('hidden');
+                loginScreen.classList.remove('slide-out-left', 'slide-in-active');
+            }, 400);
         }
         
-        const dashboardContainer = document.getElementById('dashboardContainer');
+        // Animate dashboard in
         if (dashboardContainer) {
             dashboardContainer.classList.remove('hidden');
+            dashboardContainer.classList.add('slide-in-right');
+            
+            requestAnimationFrame(() => {
+                dashboardContainer.classList.remove('slide-in-right');
+                dashboardContainer.classList.add('slide-in-active');
+            });
         }
 
         // Initialize dashboard functionality
@@ -100,7 +266,9 @@ class AccountDashboard {
         this.populateAccountSelector();
         
         // Show all accounts initially
-        this.applyFilters();
+        setTimeout(() => {
+            this.applyFilters();
+        }, 500); // Delay to let transition complete
     }
 
     setupTabNavigation() {
@@ -116,7 +284,11 @@ class AccountDashboard {
                 // Add active class to clicked button and corresponding content
                 button.classList.add('active');
                 const tabName = button.getAttribute('data-tab');
-                document.getElementById(tabName + 'Tab').classList.add('active');
+                const targetTab = document.getElementById(tabName + 'Tab');
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                    this.showToast(`Switched to ${tabName === 'accounts' ? 'Account Search' : 'Account Details'}`, 'info');
+                }
             });
         });
     }
@@ -221,20 +393,25 @@ class AccountDashboard {
         try {
             this.accounts = accountsData;
             console.log(`Loaded ${this.accounts.length} accounts`);
+            this.showToast(`Successfully loaded ${this.accounts.length} accounts`, 'success');
         } catch (error) {
             console.error('Error loading data:', error);
             this.accounts = [];
+            this.showToast('Failed to load account data', 'error');
         }
     }
 
     setupEventListeners() {
-        // Search input
+        // Search input with enhanced feedback
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(this.searchTimeout);
                 this.searchTimeout = setTimeout(() => {
                     this.applyFilters();
+                    if (e.target.value.length > 2) {
+                        this.showToast(`Searching for "${e.target.value}"...`, 'info');
+                    }
                 }, 300);
             });
         }
@@ -261,20 +438,49 @@ class AccountDashboard {
         });
 
         // Filter action buttons
-        document.getElementById('clearFilters')?.addEventListener('click', () => this.clearFilters());
-        document.getElementById('applyFilters')?.addEventListener('click', () => this.applyFilters());
+        document.getElementById('clearFilters')?.addEventListener('click', () => {
+            this.clearFilters();
+            this.showToast('All filters cleared', 'info');
+        });
+        
+        document.getElementById('applyFilters')?.addEventListener('click', () => {
+            this.applyFilters();
+            this.showToast('Filters applied', 'success');
+        });
 
-        // Table sorting
+        // Table sorting with feedback
         document.querySelectorAll('.sortable').forEach(header => {
             header.addEventListener('click', (e) => {
                 const column = e.target.getAttribute('data-column');
                 this.sortTable(column);
+                this.showToast(`Sorted by ${column}`, 'info');
             });
         });
 
         // Account selector for details
         document.getElementById('accountSelector')?.addEventListener('change', (e) => {
-            this.showAccountDetails(e.target.value);
+            if (e.target.value) {
+                const accountName = this.accounts[e.target.value]['Company Name'];
+                this.showAccountDetails(e.target.value);
+                this.showToast(`Viewing details for ${accountName}`, 'info');
+            }
+        });
+
+        // Add row click handlers for better interaction
+        this.setupTableRowInteractions();
+    }
+
+    setupTableRowInteractions() {
+        // We'll add this after the table is rendered
+        document.addEventListener('click', (e) => {
+            const row = e.target.closest('.data-table tbody tr');
+            if (row) {
+                // Add a subtle click effect
+                row.style.transform = 'translateY(1px)';
+                setTimeout(() => {
+                    row.style.transform = '';
+                }, 100);
+            }
         });
     }
 
@@ -433,7 +639,7 @@ class AccountDashboard {
         }
 
         tbody.innerHTML = this.filteredAccounts.map(account => `
-            <tr>
+            <tr class="table-row-interactive">
                 <td><strong>${account['Company Name']}</strong></td>
                 <td>${account['Assigned To']}</td>
                 <td><span class="status-badge ${account['Account Type'].toLowerCase()}">${account['Account Type']}</span></td>
@@ -448,6 +654,15 @@ class AccountDashboard {
                 <td>${account.Segmentation}</td>
             </tr>
         `).join('');
+
+        // Add pulse animation to new results
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            setTimeout(() => {
+                row.classList.add('table-row-new');
+                setTimeout(() => row.classList.remove('table-row-new'), 600);
+            }, index * 50);
+        });
     }
 
     getRevenueClass(revenue) {
