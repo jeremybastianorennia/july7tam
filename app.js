@@ -528,6 +528,16 @@ class AccountDashboard {
                     <span class="metric" id="avgProspectScore">0</span>
                     <span class="subtitle">out of 100</span>
                 </div>
+                <div class="overview-card">
+                    <h3>Top Performer</h3>
+                    <span class="metric" id="topPerformer">-</span>
+                    <span class="subtitle">by account count</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Revenue Pipeline</h3>
+                    <span class="metric" id="revenuePipeline">$0M</span>
+                    <span class="subtitle">estimated total</span>
+                </div>
             </div>
         `;
         
@@ -550,29 +560,6 @@ class AccountDashboard {
             this.filteredAccounts.reduce((sum, acc) => sum + acc['Prospect Score'], 0) / this.filteredAccounts.length
         );
         document.getElementById('avgProspectScore').textContent = avgScore;
-
-        // Top performer by account count
-        const assigneeCounts = {};
-        this.filteredAccounts.forEach(acc => {
-            assigneeCounts[acc['Assigned To']] = (assigneeCounts[acc['Assigned To']] || 0) + 1;
-        });
-        const topPerformer = Object.keys(assigneeCounts).reduce((a, b) => 
-            assigneeCounts[a] > assigneeCounts[b] ? a : b
-        );
-        document.getElementById('topPerformer').textContent = topPerformer;
-
-        // Revenue pipeline (simplified calculation)
-        const totalRevenue = this.filteredAccounts.reduce((sum, acc) => {
-            const revenue = acc['Revenue Estimate'];
-            let value = 0;
-            if (revenue.includes('$10 mil')) value = 17.5; // midpoint of 10-25
-            else if (revenue.includes('$25 mil')) value = 37.5; // midpoint of 25-50
-            else if (revenue.includes('$50 mil')) value = 75; // midpoint of 50-100
-            else if (revenue.includes('$100 mil')) value = 175; // midpoint of 100-250
-            else if (revenue.includes('$250 mil')) value = 375; // midpoint of 250-500
-            return sum + value;
-        }, 0);
-        document.getElementById('revenuePipeline').textContent = `$${Math.round(totalRevenue)}M`;
     }
 
     // Add theme toggle to header
