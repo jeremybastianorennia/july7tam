@@ -120,6 +120,45 @@ class AccountDashboard {
                 box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
             }
             
+            /* Salesforce button styling */
+            .salesforce-button {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--space-8);
+                padding: var(--space-12) var(--space-16);
+                background: linear-gradient(135deg, #1589ee 0%, #0e7ae4 100%);
+                color: white !important;
+                text-decoration: none !important;
+                border-radius: var(--radius-base);
+                font-weight: var(--font-weight-medium);
+                font-size: var(--font-size-sm);
+                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                box-shadow: 0 2px 4px rgba(21, 137, 238, 0.2);
+                border: none;
+                cursor: pointer;
+            }
+            
+            .salesforce-button:hover {
+                background: linear-gradient(135deg, #0e7ae4 0%, #0c6bd1 100%);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(21, 137, 238, 0.3);
+                color: white !important;
+            }
+            
+            .salesforce-button:active {
+                transform: translateY(0);
+                box-shadow: 0 2px 4px rgba(21, 137, 238, 0.2);
+            }
+            
+            .salesforce-icon {
+                font-size: var(--font-size-base);
+            }
+            
+            .external-icon {
+                font-size: var(--font-size-xs);
+                opacity: 0.8;
+            }
+            
             /* Toast notification styles */
             .toast {
                 position: fixed;
@@ -808,7 +847,16 @@ class AccountDashboard {
             Notes: ${Array.isArray(account['Account Notes']) ? account['Account Notes'].join(', ') : account['Account Notes']}
         `;
 
-        document.getElementById('salesforceId').textContent = account.SalesforceID;
+        // Create Salesforce button link
+        const salesforceContainer = document.getElementById('salesforceId');
+        const salesforceUrl = `https://orennia.lightning.force.com/lightning/r/Account/${account.SalesforceID}/view`;
+        salesforceContainer.innerHTML = `
+            <a href="${salesforceUrl}" target="_blank" class="salesforce-button">
+                <span class="salesforce-icon">🚀</span>
+                View in Salesforce
+                <span class="external-icon">↗</span>
+            </a>
+        `;
 
         detailsContent.classList.remove('hidden');
     }
