@@ -727,6 +727,48 @@ class AccountDashboard {
         });
     }
 
+    // Export to CSV functionality
+    exportToCSV() {
+        if (!this.filteredAccounts.length) {
+            this.showToast('No data to export', 'error');
+            return;
+        }
+
+        // Define columns to export
+        const columns = [
+            'Company Name', 'Assigned To', 'Account Type', 'Prospect Score',
+            'Website', 'Revenue Estimate', 'Employees', 'Head Office', 
+            'Country', 'Segmentation', 'Drop Notes'
+        ];
+
+        // Create CSV content
+        const csvContent = [
+            columns.join(','), // Header row
+            ...this.filteredAccounts.map(account => 
+                columns.map(col => {
+                    let value = account[col];
+                    if (Array.isArray(value)) value = value.join('; ');
+                    // Escape commas and quotes
+                    value = String(value).replace(/"/g, '""');
+                    return `"${value}"`;
+                }).join(',')
+            )
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `accounts_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Exported ${this.filteredAccounts.length} accounts to CSV`, 'success');
+    }
+
     updateAutocompleteSelection(items, selectedIndex) {
         items.forEach((item, index) => {
             item.classList.toggle('selected', index === selectedIndex);
@@ -804,7 +846,7 @@ class AccountDashboard {
         // Previous button
         buttons.push(`
             <button class="pagination-button" ${this.currentPage === 1 ? 'disabled' : ''} 
-                    onclick="dashboard.goToPage(${this.currentPage - 1})">
+                    data-page="${this.currentPage - 1}">
                 ‹ Previous
             </button>
         `);
@@ -818,7 +860,7 @@ class AccountDashboard {
             } else {
                 buttons.push(`
                     <button class="pagination-button ${pageNum === this.currentPage ? 'active' : ''}" 
-                            onclick="dashboard.goToPage(${pageNum})">
+                            data-page="${pageNum}">
                         ${pageNum}
                     </button>
                 `);
@@ -828,12 +870,22 @@ class AccountDashboard {
         // Next button
         buttons.push(`
             <button class="pagination-button" ${this.currentPage === this.totalPages || this.totalPages === 0 ? 'disabled' : ''} 
-                    onclick="dashboard.goToPage(${this.currentPage + 1})">
+                    data-page="${this.currentPage + 1}">
                 Next ›
             </button>
         `);
 
         container.innerHTML = buttons.join('');
+
+        // Add event listeners to pagination buttons
+        container.querySelectorAll('.pagination-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const page = parseInt(e.target.dataset.page);
+                if (!isNaN(page) && !e.target.disabled) {
+                    this.goToPage(page);
+                }
+            });
+        });
     }
 
     // Calculate which page numbers to display
@@ -1509,45 +1561,17 @@ class AccountDashboard {
     }
 
     updateTable() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-
-        if (this.filteredAccounts.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="12" style="text-align: center; padding: var(--space-32); color: var(--color-text-secondary);">
-                        No accounts match your current filters
-                    </td>
-                </tr>
-            `;
-            return;
+        // Reset to first page when applying new filters
+        this.currentPage = 1;
+        
+        // Create pagination controls if they don't exist
+        if (!document.querySelector('.pagination-container')) {
+            this.createPaginationControls();
         }
-
-        tbody.innerHTML = this.filteredAccounts.map(account => `
-            <tr class="table-row-interactive">
-                <td><strong>${account['Company Name']}</strong></td>
-                <td>${account['Assigned To']}</td>
-                <td><span class="status-badge ${account['Account Type'].toLowerCase()}">${account['Account Type']}</span></td>
-                <td><strong>${account['Prospect Score']}</strong></td>
-                <td>${Array.isArray(account['Account Notes']) ? account['Account Notes'].join(', ') : account['Account Notes']}</td>
-                <td>${account['Drop Notes']}</td>
-                <td class="link-cell"><a href="http://${account.Website}" target="_blank">${account.Website}</a></td>
-                <td class="${this.getRevenueClass(account['Revenue Estimate'])}">${account['Revenue Estimate']}</td>
-                <td>${account.Employees.toLocaleString()}</td>
-                <td>${account['Head Office']}</td>
-                <td>${account.Country}</td>
-                <td>${account.Segmentation}</td>
-            </tr>
-        `).join('');
-
-        // Add pulse animation to new results
-        const rows = tbody.querySelectorAll('tr');
-        rows.forEach((row, index) => {
-            setTimeout(() => {
-                row.classList.add('table-row-new');
-                setTimeout(() => row.classList.remove('table-row-new'), 600);
-            }, index * 50);
-        });
+        
+        // Update pagination and render current page
+        this.updatePagination();
+        this.renderCurrentPage();
     }
 
     getRevenueClass(revenue) {
@@ -1579,7 +1603,8 @@ class AccountDashboard {
             return 0;
         });
 
-        this.updateTable();
+        // Stay on current page after sorting, but re-render
+        this.renderCurrentPage();
         this.updateSortIndicators();
     }
 
