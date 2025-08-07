@@ -59,7 +59,7 @@ class AccountDashboard {
     handleLogin() {
         const passwordField = document.getElementById('passwordField');
         const password = passwordField.value;
-        const correctPassword = 'zoominfo2024'; // In production, this should be handled server-side
+        const correctPassword = 'flames'; // In production, this should be handled server-side
 
         if (password === correctPassword) {
             sessionStorage.setItem('dashboardAuth', 'true');
