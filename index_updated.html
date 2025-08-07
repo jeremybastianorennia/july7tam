@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoomInfo Account Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Password Protection Login Screen -->
+    <div id="loginScreen" class="hidden">
+        <div class="login-container">
+            <div class="login-card">
+                <h2>Account Dashboard Access</h2>
+                <p>Enter password to continue</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <input type="password" id="passwordField" class="form-control" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                </form>
+                <div id="loginError" class="hidden" style="color: var(--color-error); margin-top: var(--space-8); font-size: var(--font-size-sm);">
+                    Incorrect password. Please try again.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div id="dashboardContainer" class="hidden">
+        <header class="header">
+            <div class="container">
+                <h1>ZoomInfo Account Dashboard</h1>
+                <p class="subtitle">Sales account management and analytics</p>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Tab Navigation -->
+            <div class="tab-container">
+                <div class="tab-nav">
+                    <button class="tab-button active" data-tab="accounts">Account Search</button>
+                    <button class="tab-button" data-tab="details">Account Details</button>
+                </div>
+
+                <!-- Account Search Tab -->
+                <div id="accountsTab" class="tab-content active">
+                    <section class="filters-section">
+                        <h2>Filters</h2>
+                        <div class="filters-grid">
+                            <!-- Search -->
+                            <div class="search-group">
+                                <label for="searchInput" class="form-label">Search Accounts</label>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search by company name, website, or notes...">
+                            </div>
+
+                            <!-- Assigned To - Multi-Select -->
+                            <div class="filter-group">
+                                <label for="assignedToFilter" class="form-label">Assigned To</label>
+                                <div class="multi-select-container">
+                                    <div class="multi-select-display" id="assignedToDisplay">
+                                        <span class="placeholder">Select team members...</span>
+                                        <span class="dropdown-arrow">▼</span>
+                                    </div>
+                                    <div class="multi-select-dropdown hidden" id="assignedToDropdown">
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Avery Reid"> Avery Reid
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Blake Davis"> Blake Davis
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Jordan Green"> Jordan Green
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Morgan Lee"> Morgan Lee
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Sydney Wong"> Sydney Wong
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Taylor Smith"> Taylor Smith
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Account Type -->
+                            <div class="filter-group">
+                                <label for="accountTypeFilter" class="form-label">Account Type</label>
+                                <select id="accountTypeFilter" class="form-control">
+                                    <option value="">All Types</option>
+                                    <option value="Customer">Customer</option>
+                                    <option value="Prospect">Prospect</option>
+                                    <option value="Suspect">Suspect</option>
+                                </select>
+                            </div>
+
+                            <!-- Segmentation - Multi-Select -->
+                            <div class="filter-group">
+                                <label for="segmentationFilter" class="form-label">Segmentation</label>
+                                <div class="multi-select-container">
+                                    <div class="multi-select-display" id="segmentationDisplay">
+                                        <span class="placeholder">Select segments...</span>
+                                        <span class="dropdown-arrow">▼</span>
+                                    </div>
+                                    <div class="multi-select-dropdown hidden" id="segmentationDropdown">
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Enterprise"> Enterprise
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="Mid-Market"> Mid-Market
+                                        </label>
+                                        <label class="multi-select-option">
+                                            <input type="checkbox" value="SMB"> SMB
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Country -->
+                            <div class="filter-group">
+                                <label for="countryFilter" class="form-label">Country</label>
+                                <select id="countryFilter" class="form-control">
+                                    <option value="">All Countries</option>
+                                </select>
+                            </div>
+
+                            <!-- Prospect Score Range -->
+                            <div class="filter-group">
+                                <label class="form-label">Prospect Score Range</label>
+                                <div class="employee-range">
+                                    <input type="number" id="minScore" class="form-control" placeholder="Min" min="0" max="100">
+                                    <span>to</span>
+                                    <input type="number" id="maxScore" class="form-control" placeholder="Max" min="0" max="100">
+                                </div>
+                            </div>
+
+                            <!-- Employee Count Range -->
+                            <div class="filter-group">
+                                <label class="form-label">Employee Count Range</label>
+                                <div class="employee-range">
+                                    <input type="number" id="minEmployees" class="form-control" placeholder="Min employees">
+                                    <span>to</span>
+                                    <input type="number" id="maxEmployees" class="form-control" placeholder="Max employees">
+                                </div>
+                            </div>
+
+                            <!-- Filter Actions -->
+                            <div class="filter-actions">
+                                <button id="clearFilters" class="btn btn--outline">Clear All</button>
+                                <button id="applyFilters" class="btn btn--primary">Apply Filters</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="results-section">
+                        <div class="results-header">
+                            <h2>Account Results</h2>
+                            <div class="results-count" id="resultsCount">0 accounts found</div>
+                            <div class="loading-indicator hidden" id="loadingIndicator">Loading...</div>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead class="table-header">
+                                    <tr>
+                                        <th class="sortable" data-column="Company Name">Company Name <span class="sort-arrow"></span></th>
+                                        <th class="sortable" data-column="Assigned To">Assigned To <span class="sort-arrow"></span></th>
+                                        <th class="sortable" data-column="Account Type">Account Type <span class="sort-arrow"></span></th>
+                                        <th class="sortable" data-column="Prospect Score">Prospect Score <span class="sort-arrow"></span></th>
+                                        <th>Account Notes</th>
+                                        <th>Drop Notes</th>
+                                        <th>Website</th>
+                                        <th class="sortable" data-column="Revenue Estimate">Revenue <span class="sort-arrow"></span></th>
+                                        <th class="sortable" data-column="Employees">Employees <span class="sort-arrow"></span></th>
+                                        <th>Head Office</th>
+                                        <th class="sortable" data-column="Country">Country <span class="sort-arrow"></span></th>
+                                        <th class="sortable" data-column="Segmentation">Segmentation <span class="sort-arrow"></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <tr>
+                                        <td colspan="12" style="text-align: center; padding: var(--space-32); color: var(--color-text-secondary);">
+                                            Use the filters above to search for accounts
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Account Details Tab -->
+                <div id="detailsTab" class="tab-content">
+                    <section class="account-details-section">
+                        <h2>Account Details</h2>
+                        <div class="account-selector-container">
+                            <div class="form-group">
+                                <label for="accountSelector" class="form-label">Select Account for Details</label>
+                                <select id="accountSelector" class="form-control">
+                                    <option value="">Choose an account...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="accountDetailsContent" class="hidden">
+                            <div class="details-grid">
+                                <div class="card scoring-card">
+                                    <div class="card__body">
+                                        <h3>Scoring Metrics</h3>
+                                        <div class="score-item">
+                                            <label>Prospect Score</label>
+                                            <div class="score-bar-container">
+                                                <div class="score-bar">
+                                                    <div class="score-fill" id="prospectScoreBar"></div>
+                                                </div>
+                                                <span class="score-value" id="prospectScoreValue">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="score-item">
+                                            <label>Activity Level</label>
+                                            <div class="score-bar-container">
+                                                <div class="score-bar">
+                                                    <div class="score-fill" id="activityScoreBar"></div>
+                                                </div>
+                                                <span class="score-value" id="activityScoreValue">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="score-item">
+                                            <label>Generation Score</label>
+                                            <div class="score-bar-container">
+                                                <div class="score-bar">
+                                                    <div class="score-fill" id="generationScoreBar"></div>
+                                                </div>
+                                                <span class="score-value" id="generationScoreValue">0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card info-card">
+                                    <div class="card__body">
+                                        <h3>Account Information</h3>
+                                        <div class="info-item">
+                                            <label>Company Details</label>
+                                            <div class="info-value" id="companyDetails">-</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Contact Information</label>
+                                            <div class="info-value" id="contactInfo">-</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Business Metrics</label>
+                                            <div class="info-value" id="businessMetrics">-</div>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Salesforce ID</label>
+                                            <div class="info-value mono-text" id="salesforceId">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
