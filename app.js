@@ -28,18 +28,20 @@ class AccountDashboard {
     }
 
     showLogin() {
-        // Create login screen if it doesn't exist
-        if (!document.getElementById('loginScreen')) {
-            this.createLoginScreen();
+        // Remove hidden class instead of setting display style
+        const loginScreen = document.getElementById('loginScreen');
+        if (loginScreen) {
+            loginScreen.classList.remove('hidden');
         }
-        document.getElementById('loginScreen').style.display = 'flex';
-        if (document.getElementById('dashboardContainer')) {
-            document.getElementById('dashboardContainer').style.display = 'none';
+        
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        if (dashboardContainer) {
+            dashboardContainer.classList.add('hidden');
         }
     }
 
     createLoginScreen() {
-        // Login screen is now in HTML, just make sure it exists
+        // Login screen is already in HTML, just make sure it exists
         const loginScreen = document.getElementById('loginScreen');
         if (loginScreen) {
             loginScreen.classList.remove('hidden');
@@ -79,9 +81,15 @@ class AccountDashboard {
     }
 
     showDashboard() {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboardContainer').classList.remove('hidden');
-        document.getElementById('dashboardContainer').style.display = 'block';
+        const loginScreen = document.getElementById('loginScreen');
+        if (loginScreen) {
+            loginScreen.classList.add('hidden');
+        }
+        
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        if (dashboardContainer) {
+            dashboardContainer.classList.remove('hidden');
+        }
 
         // Initialize dashboard functionality
         this.loadData();
