@@ -89,6 +89,37 @@ class AccountDashboard {
                 transition-duration: 0.1s;
             }
             
+            /* Enhanced score bar animations */
+            .score-fill {
+                transition: box-shadow 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .score-fill::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, 
+                    transparent, 
+                    rgba(255, 255, 255, 0.2), 
+                    transparent);
+                animation: shimmer 2s ease-in-out;
+                animation-delay: 0.5s;
+            }
+            
+            @keyframes shimmer {
+                0% { left: -100%; }
+                100% { left: 100%; }
+            }
+            
+            .score-bar {
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            
             /* Toast notification styles */
             .toast {
                 position: fixed;
@@ -745,10 +776,18 @@ class AccountDashboard {
         const account = this.accounts[accountIndex];
         if (!account) return;
 
-        // Update scoring metrics
-        this.updateScoreBar('prospectScoreBar', 'prospectScoreValue', account['Prospect Score'], 100);
-        this.updateScoreBar('activityScoreBar', 'activityScoreValue', account.Activity, 10);
-        this.updateScoreBar('generationScoreBar', 'generationScoreValue', account.Generation, 10);
+        // Update scoring metrics with staggered animation
+        setTimeout(() => {
+            this.updateScoreBar('prospectScoreBar', 'prospectScoreValue', account['Prospect Score'], 100);
+        }, 100);
+        
+        setTimeout(() => {
+            this.updateScoreBar('activityScoreBar', 'activityScoreValue', account.Activity, 10);
+        }, 300);
+        
+        setTimeout(() => {
+            this.updateScoreBar('generationScoreBar', 'generationScoreValue', account.Generation, 10);
+        }, 500);
 
         // Update account information
         document.getElementById('companyDetails').innerHTML = `
@@ -780,13 +819,54 @@ class AccountDashboard {
 
         if (bar && valueSpan) {
             const percentage = (score / maxValue) * 100;
-            bar.style.width = `${percentage}%`;
-            valueSpan.textContent = score;
-
-            // Add animation class
-            bar.classList.add('animate');
-            setTimeout(() => bar.classList.remove('animate'), 1000);
+            
+            // Reset bar to start animation from 0
+            bar.style.width = '0%';
+            valueSpan.textContent = '0';
+            
+            // Animate both the bar width and number counting
+            this.animateScoreBar(bar, valueSpan, percentage, score);
         }
+    }
+
+    // Smooth animation for score bars
+    animateScoreBar(barElement, valueElement, targetPercentage, targetValue) {
+        const duration = 1500; // 1.5 seconds
+        const startTime = performance.now();
+        
+        // Easing function for smooth animation
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutCubic(progress);
+            
+            // Animate bar width
+            const currentWidth = easedProgress * targetPercentage;
+            barElement.style.width = `${currentWidth}%`;
+            
+            // Animate number counting
+            const currentValue = Math.round(easedProgress * targetValue);
+            valueElement.textContent = currentValue;
+            
+            // Continue animation if not complete
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Ensure final values are exact
+                barElement.style.width = `${targetPercentage}%`;
+                valueElement.textContent = targetValue;
+                
+                // Add a subtle pulse effect when complete
+                barElement.style.boxShadow = '0 0 10px rgba(var(--color-primary-rgb, 33, 128, 141), 0.4)';
+                setTimeout(() => {
+                    barElement.style.boxShadow = '';
+                }, 600);
+            }
+        };
+        
+        requestAnimationFrame(animate);
     }
 }
 
