@@ -21,8 +21,8 @@ class AccountDashboard {
     addCustomStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* Smooth page transitions */
-            .login-container {
+            /* Smooth page transitions - Fix login positioning */
+            #loginScreen {
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
@@ -32,8 +32,21 @@ class AccountDashboard {
                 align-items: center !important;
                 justify-content: center !important;
                 z-index: 9999 !important;
+                background: var(--color-background) !important;
                 transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
                            opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            
+            #loginScreen.hidden {
+                display: none !important;
+            }
+            
+            .login-container {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 100% !important;
+                height: 100% !important;
             }
             
             #dashboardContainer {
