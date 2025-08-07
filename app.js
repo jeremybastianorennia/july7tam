@@ -180,6 +180,91 @@ class AccountDashboard {
                 margin-top: var(--space-16);
             }
 
+            /* Pagination styles */
+            .pagination-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: var(--space-16);
+                padding: var(--space-16) 0;
+                border-top: 1px solid var(--color-border);
+            }
+            
+            .pagination {
+                display: flex;
+                align-items: center;
+                gap: var(--space-4);
+            }
+            
+            .pagination-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: var(--space-8) var(--space-12);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-base);
+                background: var(--color-surface);
+                color: var(--color-text);
+                font-size: var(--font-size-sm);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-decoration: none;
+                min-width: 40px;
+                height: 40px;
+            }
+            
+            .pagination-button:hover:not(:disabled) {
+                background: var(--color-secondary);
+                border-color: var(--color-primary);
+                color: var(--color-primary);
+            }
+            
+            .pagination-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: var(--color-secondary);
+            }
+            
+            .pagination-button.active {
+                background: var(--color-primary);
+                color: var(--color-btn-primary-text);
+                border-color: var(--color-primary);
+            }
+            
+            .pagination-button.active:hover {
+                background: var(--color-primary-hover);
+                border-color: var(--color-primary-hover);
+                color: var(--color-btn-primary-text);
+            }
+            
+            .pagination-info {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+            
+            .page-size-selector {
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+            
+            .page-size-selector select {
+                padding: var(--space-4) var(--space-8);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-sm);
+                background: var(--color-surface);
+                color: var(--color-text);
+                font-size: var(--font-size-sm);
+            }
+            
+            .pagination-ellipsis {
+                padding: var(--space-8) var(--space-4);
+                color: var(--color-text-secondary);
+                user-select: none;
+            }
+
             /* Smooth page transitions - Fix login positioning */
             #loginScreen {
                 position: fixed !important;
@@ -422,91 +507,6 @@ class AccountDashboard {
                     font-size: var(--font-size-xs);
                 }
             }
-            
-            /* Pagination styles */
-            .pagination-container {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-top: var(--space-16);
-                padding: var(--space-16) 0;
-                border-top: 1px solid var(--color-border);
-            }
-            
-            .pagination {
-                display: flex;
-                align-items: center;
-                gap: var(--space-4);
-            }
-            
-            .pagination-button {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: var(--space-8) var(--space-12);
-                border: 1px solid var(--color-border);
-                border-radius: var(--radius-base);
-                background: var(--color-surface);
-                color: var(--color-text);
-                font-size: var(--font-size-sm);
-                cursor: pointer;
-                transition: all 0.2s ease;
-                text-decoration: none;
-                min-width: 40px;
-                height: 40px;
-            }
-            
-            .pagination-button:hover:not(:disabled) {
-                background: var(--color-secondary);
-                border-color: var(--color-primary);
-                color: var(--color-primary);
-            }
-            
-            .pagination-button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-                background: var(--color-secondary);
-            }
-            
-            .pagination-button.active {
-                background: var(--color-primary);
-                color: var(--color-btn-primary-text);
-                border-color: var(--color-primary);
-            }
-            
-            .pagination-button.active:hover {
-                background: var(--color-primary-hover);
-                border-color: var(--color-primary-hover);
-                color: var(--color-btn-primary-text);
-            }
-            
-            .pagination-info {
-                font-size: var(--font-size-sm);
-                color: var(--color-text-secondary);
-            }
-            
-            .page-size-selector {
-                display: flex;
-                align-items: center;
-                gap: var(--space-8);
-                font-size: var(--font-size-sm);
-                color: var(--color-text-secondary);
-            }
-            
-            .page-size-selector select {
-                padding: var(--space-4) var(--space-8);
-                border: 1px solid var(--color-border);
-                border-radius: var(--radius-sm);
-                background: var(--color-surface);
-                color: var(--color-text);
-                font-size: var(--font-size-sm);
-            }
-            
-            .pagination-ellipsis {
-                padding: var(--space-8) var(--space-4);
-                color: var(--color-text-secondary);
-                user-select: none;
-            }
         `;
         document.head.appendChild(style);
     }
@@ -725,48 +725,6 @@ class AccountDashboard {
                 dropdown.classList.add('hidden');
             }
         });
-    }
-
-    // Export to CSV functionality
-    exportToCSV() {
-        if (!this.filteredAccounts.length) {
-            this.showToast('No data to export', 'error');
-            return;
-        }
-
-        // Define columns to export
-        const columns = [
-            'Company Name', 'Assigned To', 'Account Type', 'Prospect Score',
-            'Website', 'Revenue Estimate', 'Employees', 'Head Office', 
-            'Country', 'Segmentation', 'Drop Notes'
-        ];
-
-        // Create CSV content
-        const csvContent = [
-            columns.join(','), // Header row
-            ...this.filteredAccounts.map(account => 
-                columns.map(col => {
-                    let value = account[col];
-                    if (Array.isArray(value)) value = value.join('; ');
-                    // Escape commas and quotes
-                    value = String(value).replace(/"/g, '""');
-                    return `"${value}"`;
-                }).join(',')
-            )
-        ].join('\n');
-
-        // Create and trigger download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `accounts_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        this.showToast(`Exported ${this.filteredAccounts.length} accounts to CSV`, 'success');
     }
 
     updateAutocompleteSelection(items, selectedIndex) {
@@ -1008,6 +966,9 @@ class AccountDashboard {
             }, index * 30); // Faster animation for pagination
         });
     }
+
+    // Export to CSV functionality
+    exportToCSV() {
         if (!this.filteredAccounts.length) {
             this.showToast('No data to export', 'error');
             return;
