@@ -22,24 +22,38 @@ class AccountDashboard {
         const style = document.createElement('style');
         style.textContent = `
             /* Smooth page transitions */
-            .login-container, #dashboardContainer {
+            .login-container {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 9999 !important;
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                           opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            
+            #dashboardContainer {
                 transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
                            opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 transform-origin: center center;
             }
             
             .slide-out-left {
-                transform: translateX(-100%) scale(0.95);
+                transform: translateX(-100%);
                 opacity: 0;
             }
             
             .slide-in-right {
-                transform: translateX(100%) scale(0.95);
+                transform: translateX(100%);
                 opacity: 0;
             }
             
             .slide-in-active {
-                transform: translateX(0) scale(1);
+                transform: translateX(0);
                 opacity: 1;
             }
             
