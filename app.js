@@ -9,6 +9,12 @@ class AccountDashboard {
         this.selectedAssignedTo = [];
         this.selectedSegmentation = [];
         this.currentTheme = localStorage.getItem('dashboardTheme') || 'auto';
+        
+        // Pagination state
+        this.currentPage = 1;
+        this.itemsPerPage = 25; // Show 25 accounts per page
+        this.totalPages = 1;
+        
         this.init();
     }
 
@@ -400,6 +406,106 @@ class AccountDashboard {
                     flex-direction: column;
                     gap: var(--space-12);
                 }
+                
+                .pagination-container {
+                    flex-direction: column;
+                    gap: var(--space-12);
+                    text-align: center;
+                }
+                
+                .pagination {
+                    justify-content: center;
+                }
+                
+                .pagination-button {
+                    padding: var(--space-6) var(--space-10);
+                    font-size: var(--font-size-xs);
+                }
+            }
+            
+            /* Pagination styles */
+            .pagination-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: var(--space-16);
+                padding: var(--space-16) 0;
+                border-top: 1px solid var(--color-border);
+            }
+            
+            .pagination {
+                display: flex;
+                align-items: center;
+                gap: var(--space-4);
+            }
+            
+            .pagination-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: var(--space-8) var(--space-12);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-base);
+                background: var(--color-surface);
+                color: var(--color-text);
+                font-size: var(--font-size-sm);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-decoration: none;
+                min-width: 40px;
+                height: 40px;
+            }
+            
+            .pagination-button:hover:not(:disabled) {
+                background: var(--color-secondary);
+                border-color: var(--color-primary);
+                color: var(--color-primary);
+            }
+            
+            .pagination-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: var(--color-secondary);
+            }
+            
+            .pagination-button.active {
+                background: var(--color-primary);
+                color: var(--color-btn-primary-text);
+                border-color: var(--color-primary);
+            }
+            
+            .pagination-button.active:hover {
+                background: var(--color-primary-hover);
+                border-color: var(--color-primary-hover);
+                color: var(--color-btn-primary-text);
+            }
+            
+            .pagination-info {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+            
+            .page-size-selector {
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+            
+            .page-size-selector select {
+                padding: var(--space-4) var(--space-8);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-sm);
+                background: var(--color-surface);
+                color: var(--color-text);
+                font-size: var(--font-size-sm);
+            }
+            
+            .pagination-ellipsis {
+                padding: var(--space-8) var(--space-4);
+                color: var(--color-text-secondary);
+                user-select: none;
             }
         `;
         document.head.appendChild(style);
@@ -421,6 +527,16 @@ class AccountDashboard {
                     <h3>Avg Prospect Score</h3>
                     <span class="metric" id="avgProspectScore">0</span>
                     <span class="subtitle">out of 100</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Top Performer</h3>
+                    <span class="metric" id="topPerformer">-</span>
+                    <span class="subtitle">by account count</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Revenue Pipeline</h3>
+                    <span class="metric" id="revenuePipeline">$0M</span>
+                    <span class="subtitle">estimated total</span>
                 </div>
             </div>
         `;
@@ -617,8 +733,229 @@ class AccountDashboard {
         });
     }
 
-    // Export to CSV functionality
-    exportToCSV() {
+    // Create pagination controls
+    createPaginationControls() {
+        const tableContainer = document.querySelector('.table-container');
+        if (!tableContainer) return;
+
+        // Remove existing pagination
+        const existingPagination = document.querySelector('.pagination-container');
+        if (existingPagination) {
+            existingPagination.remove();
+        }
+
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination-container';
+        paginationContainer.innerHTML = `
+            <div class="page-size-selector">
+                <span>Show</span>
+                <select id="pageSizeSelect">
+                    <option value="10" ${this.itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                    <option value="25" ${this.itemsPerPage === 25 ? 'selected' : ''}>25</option>
+                    <option value="50" ${this.itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                    <option value="100" ${this.itemsPerPage === 100 ? 'selected' : ''}>100</option>
+                </select>
+                <span>per page</span>
+            </div>
+            
+            <div class="pagination" id="paginationControls">
+                <!-- Pagination buttons will be inserted here -->
+            </div>
+            
+            <div class="pagination-info" id="paginationInfo">
+                <!-- Pagination info will be inserted here -->
+            </div>
+        `;
+
+        tableContainer.appendChild(paginationContainer);
+
+        // Add event listener for page size change
+        document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+            this.itemsPerPage = parseInt(e.target.value);
+            this.currentPage = 1; // Reset to first page
+            this.updatePagination();
+            this.renderCurrentPage();
+            this.showToast(`Changed to ${this.itemsPerPage} items per page`, 'info');
+        });
+
+        this.updatePagination();
+    }
+
+    // Update pagination controls
+    updatePagination() {
+        this.totalPages = Math.ceil(this.filteredAccounts.length / this.itemsPerPage);
+        
+        // Ensure current page is valid
+        if (this.currentPage > this.totalPages) {
+            this.currentPage = Math.max(1, this.totalPages);
+        }
+
+        this.renderPaginationButtons();
+        this.updatePaginationInfo();
+    }
+
+    // Render pagination buttons
+    renderPaginationButtons() {
+        const container = document.getElementById('paginationControls');
+        if (!container) return;
+
+        const buttons = [];
+
+        // Previous button
+        buttons.push(`
+            <button class="pagination-button" ${this.currentPage === 1 ? 'disabled' : ''} 
+                    onclick="dashboard.goToPage(${this.currentPage - 1})">
+                ‹ Previous
+            </button>
+        `);
+
+        // Calculate which page numbers to show
+        const pagesToShow = this.getPageNumbers();
+        
+        pagesToShow.forEach(pageNum => {
+            if (pageNum === '...') {
+                buttons.push('<span class="pagination-ellipsis">...</span>');
+            } else {
+                buttons.push(`
+                    <button class="pagination-button ${pageNum === this.currentPage ? 'active' : ''}" 
+                            onclick="dashboard.goToPage(${pageNum})">
+                        ${pageNum}
+                    </button>
+                `);
+            }
+        });
+
+        // Next button
+        buttons.push(`
+            <button class="pagination-button" ${this.currentPage === this.totalPages || this.totalPages === 0 ? 'disabled' : ''} 
+                    onclick="dashboard.goToPage(${this.currentPage + 1})">
+                Next ›
+            </button>
+        `);
+
+        container.innerHTML = buttons.join('');
+    }
+
+    // Calculate which page numbers to display
+    getPageNumbers() {
+        const pages = [];
+        const total = this.totalPages;
+        const current = this.currentPage;
+
+        if (total <= 7) {
+            // Show all pages if 7 or fewer
+            for (let i = 1; i <= total; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Always show first page
+            pages.push(1);
+
+            if (current <= 4) {
+                // Near the beginning
+                for (let i = 2; i <= 5; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(total);
+            } else if (current >= total - 3) {
+                // Near the end
+                pages.push('...');
+                for (let i = total - 4; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // In the middle
+                pages.push('...');
+                for (let i = current - 1; i <= current + 1; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(total);
+            }
+        }
+
+        return pages;
+    }
+
+    // Update pagination info text
+    updatePaginationInfo() {
+        const container = document.getElementById('paginationInfo');
+        if (!container) return;
+
+        const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+        const endItem = Math.min(this.currentPage * this.itemsPerPage, this.filteredAccounts.length);
+        const totalItems = this.filteredAccounts.length;
+
+        if (totalItems === 0) {
+            container.textContent = 'No accounts to display';
+        } else {
+            container.textContent = `Showing ${startItem}-${endItem} of ${totalItems} accounts`;
+        }
+    }
+
+    // Navigate to specific page
+    goToPage(pageNumber) {
+        if (pageNumber < 1 || pageNumber > this.totalPages) return;
+        
+        this.currentPage = pageNumber;
+        this.renderCurrentPage();
+        this.updatePagination();
+        
+        // Smooth scroll to top of table
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+            tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // Render only the current page of data
+    renderCurrentPage() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+
+        if (this.filteredAccounts.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="12" style="text-align: center; padding: var(--space-32); color: var(--color-text-secondary);">
+                        No accounts match your current filters
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Calculate which accounts to show
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        const pageAccounts = this.filteredAccounts.slice(startIndex, endIndex);
+
+        tbody.innerHTML = pageAccounts.map(account => `
+            <tr class="table-row-interactive">
+                <td><strong>${account['Company Name']}</strong></td>
+                <td>${account['Assigned To']}</td>
+                <td><span class="status-badge ${account['Account Type'].toLowerCase()}">${account['Account Type']}</span></td>
+                <td><strong>${account['Prospect Score']}</strong></td>
+                <td>${Array.isArray(account['Account Notes']) ? account['Account Notes'].join(', ') : account['Account Notes']}</td>
+                <td>${account['Drop Notes']}</td>
+                <td class="link-cell"><a href="http://${account.Website}" target="_blank">${account.Website}</a></td>
+                <td class="${this.getRevenueClass(account['Revenue Estimate'])}">${account['Revenue Estimate']}</td>
+                <td>${account.Employees.toLocaleString()}</td>
+                <td>${account['Head Office']}</td>
+                <td>${account.Country}</td>
+                <td>${account.Segmentation}</td>
+            </tr>
+        `).join('');
+
+        // Add pulse animation to new results
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            setTimeout(() => {
+                row.classList.add('table-row-new');
+                setTimeout(() => row.classList.remove('table-row-new'), 600);
+            }, index * 30); // Faster animation for pagination
+        });
+    }
         if (!this.filteredAccounts.length) {
             this.showToast('No data to export', 'error');
             return;
