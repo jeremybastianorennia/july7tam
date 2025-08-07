@@ -506,6 +506,111 @@ class AccountDashboard {
                     padding: var(--space-6) var(--space-10);
                     font-size: var(--font-size-xs);
                 }
+                
+                .empty-state {
+                    padding: var(--space-24) var(--space-16);
+                }
+                
+                .empty-illustration {
+                    font-size: 3rem;
+                }
+                
+                .empty-title {
+                    font-size: var(--font-size-xl);
+                }
+            }
+            
+            /* Fun Empty State Styles */
+            .empty-state {
+                text-align: center;
+                padding: var(--space-32) var(--space-16);
+                color: var(--color-text-secondary);
+                background: linear-gradient(135deg, var(--color-bg-1) 0%, var(--color-bg-2) 100%);
+                border-radius: var(--radius-lg);
+                margin: var(--space-16);
+                border: 2px dashed rgba(var(--color-primary-rgb, 33, 128, 141), 0.2);
+            }
+            
+            .empty-illustration {
+                font-size: 4rem;
+                margin-bottom: var(--space-16);
+                animation: bounce 2s ease-in-out infinite;
+                display: block;
+            }
+            
+            .empty-title {
+                font-size: var(--font-size-2xl);
+                font-weight: var(--font-weight-semibold);
+                margin-bottom: var(--space-8);
+                color: var(--color-text);
+            }
+            
+            .empty-subtitle {
+                font-size: var(--font-size-base);
+                margin-bottom: var(--space-16);
+                line-height: 1.6;
+            }
+            
+            .empty-suggestions {
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-base);
+                padding: var(--space-16);
+                margin: var(--space-16) auto 0;
+                max-width: 400px;
+                text-align: left;
+            }
+            
+            .empty-suggestions h4 {
+                margin: 0 0 var(--space-8) 0;
+                font-size: var(--font-size-sm);
+                font-weight: var(--font-weight-medium);
+                color: var(--color-text);
+            }
+            
+            .empty-suggestions ul {
+                margin: 0;
+                padding-left: var(--space-16);
+                font-size: var(--font-size-sm);
+                line-height: 1.5;
+            }
+            
+            .empty-suggestions li {
+                margin-bottom: var(--space-4);
+            }
+            
+            .clear-filters-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--space-8);
+                margin-top: var(--space-16);
+                padding: var(--space-8) var(--space-16);
+                background: var(--color-primary);
+                color: var(--color-btn-primary-text);
+                border: none;
+                border-radius: var(--radius-base);
+                cursor: pointer;
+                text-decoration: none;
+                font-size: var(--font-size-sm);
+                font-weight: var(--font-weight-medium);
+                transition: all 0.2s ease;
+            }
+            
+            .clear-filters-btn:hover {
+                background: var(--color-primary-hover);
+                transform: translateY(-1px);
+            }
+            
+            @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% {
+                    transform: translateY(0);
+                }
+                40% {
+                    transform: translateY(-10px);
+                }
+                60% {
+                    transform: translateY(-5px);
+                }
             }
         `;
         document.head.appendChild(style);
@@ -902,10 +1007,59 @@ class AccountDashboard {
         if (!tbody) return;
 
         if (this.filteredAccounts.length === 0) {
+            // Fun empty state with random illustrations
+            const emptyStates = [
+                {
+                    emoji: '🕵️‍♀️',
+                    title: 'No Accounts Found!',
+                    subtitle: 'Our detective searched everywhere but came up empty-handed.'
+                },
+                {
+                    emoji: '🦄',
+                    title: 'Oops! Nothing Here!',
+                    subtitle: 'Looks like these accounts are as rare as unicorns.'
+                },
+                {
+                    emoji: '🎯',
+                    title: 'No Bulls-Eye!',
+                    subtitle: 'Your filters are precise, but no accounts hit the target.'
+                },
+                {
+                    emoji: '🔍',
+                    title: 'Search Came Up Empty!',
+                    subtitle: 'Even our magnifying glass couldn\'t find matching accounts.'
+                },
+                {
+                    emoji: '🎪',
+                    title: 'No Show Today!',
+                    subtitle: 'The accounts you\'re looking for seem to have left the circus.'
+                }
+            ];
+            
+            const randomState = emptyStates[Math.floor(Math.random() * emptyStates.length)];
+            
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="12" style="text-align: center; padding: var(--space-32); color: var(--color-text-secondary);">
-                        No accounts match your current filters
+                    <td colspan="12" style="padding: 0; border: none;">
+                        <div class="empty-state">
+                            <span class="empty-illustration">${randomState.emoji}</span>
+                            <h3 class="empty-title">${randomState.title}</h3>
+                            <p class="empty-subtitle">${randomState.subtitle}</p>
+                            
+                            <div class="empty-suggestions">
+                                <h4>💡 Try these suggestions:</h4>
+                                <ul>
+                                    <li>Clear some filters to see more results</li>
+                                    <li>Check your spelling in the search box</li>
+                                    <li>Try a broader search term</li>
+                                    <li>Adjust your score or employee ranges</li>
+                                </ul>
+                            </div>
+                            
+                            <button class="clear-filters-btn" onclick="dashboard.clearFilters()">
+                                🧹 Clear All Filters
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -1670,6 +1824,7 @@ class AccountDashboard {
 }
 
 // Initialize the dashboard when DOM is loaded
+let dashboard; // Global reference for empty state button
 document.addEventListener('DOMContentLoaded', () => {
-    new AccountDashboard();
+    dashboard = new AccountDashboard();
 });
