@@ -15,6 +15,10 @@ class AccountDashboard {
         this.itemsPerPage = 25; // Show 25 accounts per page
         this.totalPages = 1;
         
+        // Account comparison state
+        this.selectedForComparison = [];
+        this.maxComparisons = 3;
+        
         this.init();
     }
 
@@ -612,6 +616,326 @@ class AccountDashboard {
                     transform: translateY(-5px);
                 }
             }
+            
+            /* Account Comparison Styles */
+            .comparison-checkbox {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+                accent-color: var(--color-primary);
+            }
+            
+            .comparison-button {
+                position: fixed;
+                bottom: var(--space-24);
+                right: var(--space-24);
+                background: var(--color-primary);
+                color: var(--color-btn-primary-text);
+                border: none;
+                border-radius: var(--radius-full);
+                padding: var(--space-16) var(--space-24);
+                box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 33, 128, 141), 0.3);
+                cursor: pointer;
+                font-weight: var(--font-weight-medium);
+                font-size: var(--font-size-base);
+                transition: all 0.3s ease;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            
+            .comparison-button.visible {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            
+            .comparison-button:hover {
+                background: var(--color-primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(var(--color-primary-rgb, 33, 128, 141), 0.4);
+            }
+            
+            .comparison-count {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: var(--radius-full);
+                padding: var(--space-2) var(--space-8);
+                font-size: var(--font-size-xs);
+                font-weight: var(--font-weight-bold);
+            }
+            
+            /* Comparison Modal */
+            .comparison-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+            
+            .comparison-modal.visible {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .comparison-content {
+                background: var(--color-surface);
+                border-radius: var(--radius-lg);
+                max-width: 95vw;
+                max-height: 90vh;
+                overflow: auto;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--color-border);
+            }
+            
+            .comparison-header {
+                padding: var(--space-24);
+                border-bottom: 1px solid var(--color-border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--color-bg-1);
+            }
+            
+            .comparison-title {
+                font-size: var(--font-size-2xl);
+                font-weight: var(--font-weight-semibold);
+                color: var(--color-text);
+                margin: 0;
+            }
+            
+            .comparison-actions {
+                display: flex;
+                gap: var(--space-8);
+            }
+            
+            .modal-close {
+                background: none;
+                border: none;
+                font-size: var(--font-size-xl);
+                cursor: pointer;
+                color: var(--color-text-secondary);
+                padding: var(--space-4);
+                border-radius: var(--radius-sm);
+                transition: all 0.2s ease;
+            }
+            
+            .modal-close:hover {
+                background: var(--color-secondary);
+                color: var(--color-text);
+            }
+            
+            .comparison-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: var(--space-16);
+                padding: var(--space-24);
+            }
+            
+            .comparison-card {
+                background: var(--color-background);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                position: relative;
+            }
+            
+            .comparison-card.winner {
+                border-color: var(--color-success);
+                box-shadow: 0 0 0 2px rgba(var(--color-success-rgb, 33, 128, 141), 0.1);
+            }
+            
+            .comparison-card-header {
+                padding: var(--space-16);
+                background: var(--color-bg-1);
+                border-bottom: 1px solid var(--color-border);
+                position: relative;
+            }
+            
+            .winner-badge {
+                position: absolute;
+                top: var(--space-8);
+                right: var(--space-8);
+                background: var(--color-success);
+                color: white;
+                padding: var(--space-4) var(--space-8);
+                border-radius: var(--radius-full);
+                font-size: var(--font-size-xs);
+                font-weight: var(--font-weight-bold);
+            }
+            
+            .company-name {
+                font-size: var(--font-size-xl);
+                font-weight: var(--font-weight-semibold);
+                margin-bottom: var(--space-4);
+                color: var(--color-text);
+            }
+            
+            .company-subtitle {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+            
+            .comparison-metrics {
+                padding: var(--space-16);
+            }
+            
+            .metric-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: var(--space-8) 0;
+                border-bottom: 1px solid var(--color-border);
+            }
+            
+            .metric-row:last-child {
+                border-bottom: none;
+            }
+            
+            .metric-label {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+                font-weight: var(--font-weight-medium);
+            }
+            
+            .metric-value {
+                font-size: var(--font-size-base);
+                font-weight: var(--font-weight-semibold);
+                color: var(--color-text);
+                display: flex;
+                align-items: center;
+                gap: var(--space-4);
+            }
+            
+            .metric-value.highest {
+                color: var(--color-success);
+            }
+            
+            .metric-value.lowest {
+                color: var(--color-error);
+                opacity: 0.7;
+            }
+            
+            .metric-bar {
+                width: 60px;
+                height: 6px;
+                background: var(--color-secondary);
+                border-radius: var(--radius-full);
+                overflow: hidden;
+                margin-left: var(--space-8);
+            }
+            
+            .metric-bar-fill {
+                height: 100%;
+                background: var(--color-primary);
+                transition: width 0.5s ease;
+            }
+            
+            .metric-bar-fill.highest {
+                background: var(--color-success);
+            }
+            
+            .card-actions {
+                padding: var(--space-16);
+                border-top: 1px solid var(--color-border);
+                display: flex;
+                gap: var(--space-8);
+                flex-wrap: wrap;
+            }
+            
+            .card-action {
+                padding: var(--space-6) var(--space-12);
+                background: var(--color-secondary);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-sm);
+                color: var(--color-text);
+                text-decoration: none;
+                font-size: var(--font-size-xs);
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+            
+            .card-action:hover {
+                background: var(--color-secondary-hover);
+                color: var(--color-primary);
+            }
+            
+            .insights-section {
+                margin: var(--space-24);
+                padding: var(--space-16);
+                background: var(--color-bg-2);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-lg);
+            }
+            
+            .insights-title {
+                font-size: var(--font-size-lg);
+                font-weight: var(--font-weight-semibold);
+                margin-bottom: var(--space-12);
+                color: var(--color-text);
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+            }
+            
+            .insight-item {
+                margin-bottom: var(--space-8);
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+                line-height: 1.5;
+            }
+            
+            .insight-item:last-child {
+                margin-bottom: 0;
+            }
+            
+            /* Mobile responsiveness for comparison */
+            @media (max-width: 768px) {
+                .comparison-content {
+                    max-width: 100vw;
+                    max-height: 100vh;
+                    border-radius: 0;
+                }
+                
+                .comparison-grid {
+                    grid-template-columns: 1fr;
+                    padding: var(--space-16);
+                }
+                
+                .comparison-header {
+                    padding: var(--space-16);
+                }
+                
+                .comparison-title {
+                    font-size: var(--font-size-xl);
+                }
+                
+                .comparison-button {
+                    bottom: var(--space-16);
+                    right: var(--space-16);
+                    padding: var(--space-12) var(--space-16);
+                    font-size: var(--font-size-sm);
+                }
+                
+                .card-actions {
+                    flex-direction: column;
+                }
+                
+                .card-action {
+                    text-align: center;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -1040,7 +1364,7 @@ class AccountDashboard {
             
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="12" style="padding: 0; border: none;">
+                    <td colspan="13" style="padding: 0; border: none;">
                         <div class="empty-state">
                             <span class="empty-illustration">${randomState.emoji}</span>
                             <h3 class="empty-title">${randomState.title}</h3>
@@ -1071,8 +1395,19 @@ class AccountDashboard {
         const endIndex = startIndex + this.itemsPerPage;
         const pageAccounts = this.filteredAccounts.slice(startIndex, endIndex);
 
-        tbody.innerHTML = pageAccounts.map(account => `
+        tbody.innerHTML = pageAccounts.map((account, index) => {
+            const globalIndex = (this.currentPage - 1) * this.itemsPerPage + index;
+            const isSelected = this.selectedForComparison.includes(globalIndex);
+            
+            return `
             <tr class="table-row-interactive">
+                <td>
+                    <input type="checkbox" 
+                           class="comparison-checkbox" 
+                           ${isSelected ? 'checked' : ''}
+                           onchange="dashboard.toggleAccountComparison(${globalIndex})"
+                           ${this.selectedForComparison.length >= this.maxComparisons && !isSelected ? 'disabled' : ''}>
+                </td>
                 <td><strong>${account['Company Name']}</strong></td>
                 <td>${account['Assigned To']}</td>
                 <td><span class="status-badge ${account['Account Type'].toLowerCase()}">${account['Account Type']}</span></td>
@@ -1086,7 +1421,8 @@ class AccountDashboard {
                 <td>${account.Country}</td>
                 <td>${account.Segmentation}</td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
 
         // Add pulse animation to new results
         const rows = tbody.querySelectorAll('tr');
@@ -1290,6 +1626,7 @@ class AccountDashboard {
         this.createOverviewCards();
         this.addThemeToggle();
         this.addExportButton();
+        this.createComparisonButton();
         this.updateThemeToggleText();
         
         // Show all accounts initially
@@ -1820,6 +2157,364 @@ class AccountDashboard {
             // Animate both the bar width and number counting
             this.animateScoreBar(bar, valueSpan, percentage, score);
         }
+    }
+
+    // Account Comparison Methods
+    createComparisonButton() {
+        // Create floating comparison button
+        const comparisonBtn = document.createElement('button');
+        comparisonBtn.className = 'comparison-button';
+        comparisonBtn.id = 'comparisonButton';
+        comparisonBtn.innerHTML = `
+            ⚖️ Compare Selected 
+            <span class="comparison-count" id="comparisonCount">0</span>
+        `;
+        comparisonBtn.addEventListener('click', () => this.openComparison());
+        document.body.appendChild(comparisonBtn);
+
+        // Create comparison modal
+        const modal = document.createElement('div');
+        modal.className = 'comparison-modal';
+        modal.id = 'comparisonModal';
+        modal.innerHTML = `
+            <div class="comparison-content">
+                <div class="comparison-header">
+                    <h2 class="comparison-title">Account Comparison</h2>
+                    <div class="comparison-actions">
+                        <button class="btn btn--outline btn--sm" onclick="dashboard.exportComparison()">
+                            📊 Export
+                        </button>
+                        <button class="modal-close" onclick="dashboard.closeComparison()">×</button>
+                    </div>
+                </div>
+                <div id="comparisonBody">
+                    <!-- Comparison content will be inserted here -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeComparison();
+            }
+        });
+    }
+
+    toggleAccountComparison(accountIndex) {
+        const index = this.selectedForComparison.indexOf(accountIndex);
+        
+        if (index === -1) {
+            // Add to comparison if not already selected and under limit
+            if (this.selectedForComparison.length < this.maxComparisons) {
+                this.selectedForComparison.push(accountIndex);
+                this.showToast(`Added ${this.filteredAccounts[accountIndex]['Company Name']} to comparison`, 'success');
+            }
+        } else {
+            // Remove from comparison
+            this.selectedForComparison.splice(index, 1);
+            this.showToast(`Removed ${this.filteredAccounts[accountIndex]['Company Name']} from comparison`, 'info');
+        }
+        
+        this.updateComparisonButton();
+        this.renderCurrentPage(); // Re-render to update checkboxes
+    }
+
+    updateComparisonButton() {
+        const button = document.getElementById('comparisonButton');
+        const count = document.getElementById('comparisonCount');
+        
+        if (button && count) {
+            count.textContent = this.selectedForComparison.length;
+            
+            if (this.selectedForComparison.length >= 2) {
+                button.classList.add('visible');
+            } else {
+                button.classList.remove('visible');
+            }
+        }
+    }
+
+    openComparison() {
+        if (this.selectedForComparison.length < 2) {
+            this.showToast('Please select at least 2 accounts to compare', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('comparisonModal');
+        const body = document.getElementById('comparisonBody');
+        
+        body.innerHTML = this.renderComparisonView();
+        modal.classList.add('visible');
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeComparison() {
+        const modal = document.getElementById('comparisonModal');
+        modal.classList.remove('visible');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+    }
+
+    renderComparisonView() {
+        const selectedAccounts = this.selectedForComparison.map(index => this.filteredAccounts[index]);
+        const insights = this.generateInsights(selectedAccounts);
+        
+        return `
+            <div class="comparison-grid">
+                ${selectedAccounts.map((account, index) => this.renderComparisonCard(account, index, selectedAccounts)).join('')}
+            </div>
+            <div class="insights-section">
+                <h3 class="insights-title">💡 Smart Insights</h3>
+                ${insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+            </div>
+        `;
+    }
+
+    renderComparisonCard(account, index, allAccounts) {
+        const isWinner = this.determineWinner(account, allAccounts);
+        const metrics = this.getComparisonMetrics(account, allAccounts);
+        
+        return `
+            <div class="comparison-card ${isWinner ? 'winner' : ''}">
+                ${isWinner ? '<div class="winner-badge">🏆 Top Pick</div>' : ''}
+                
+                <div class="comparison-card-header">
+                    <div class="company-name">${account['Company Name']}</div>
+                    <div class="company-subtitle">
+                        ${account.Segmentation} • ${account['Account Type']} • ${account.Country}
+                    </div>
+                </div>
+                
+                <div class="comparison-metrics">
+                    ${metrics.map(metric => `
+                        <div class="metric-row">
+                            <span class="metric-label">${metric.label}</span>
+                            <div class="metric-value ${metric.highlight}">
+                                ${metric.value}
+                                ${metric.showBar ? `
+                                    <div class="metric-bar">
+                                        <div class="metric-bar-fill ${metric.highlight}" style="width: ${metric.percentage}%"></div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="card-actions">
+                    <button class="card-action" onclick="dashboard.viewAccountDetails(${this.selectedForComparison[index]})">
+                        👁️ View Details
+                    </button>
+                    <a href="https://orennia.lightning.force.com/lightning/r/Account/${account.SalesforceID}/view" 
+                       target="_blank" class="card-action">
+                        🚀 Salesforce
+                    </a>
+                    <button class="card-action" onclick="dashboard.removeFromComparison(${this.selectedForComparison[index]})">
+                        🗑️ Remove
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    getComparisonMetrics(account, allAccounts) {
+        const scores = allAccounts.map(acc => acc['Prospect Score']);
+        const employees = allAccounts.map(acc => acc.Employees);
+        const revenues = allAccounts.map(acc => this.getRevenueNumeric(acc['Revenue Estimate']));
+        
+        const maxScore = Math.max(...scores);
+        const maxEmployees = Math.max(...employees);
+        const maxRevenue = Math.max(...revenues);
+        
+        const minScore = Math.min(...scores);
+        const minEmployees = Math.min(...employees);
+        const minRevenue = Math.min(...revenues);
+        
+        return [
+            {
+                label: 'Prospect Score',
+                value: account['Prospect Score'],
+                highlight: account['Prospect Score'] === maxScore ? 'highest' : 
+                          account['Prospect Score'] === minScore ? 'lowest' : '',
+                showBar: true,
+                percentage: (account['Prospect Score'] / maxScore) * 100
+            },
+            {
+                label: 'Revenue',
+                value: account['Revenue Estimate'],
+                highlight: this.getRevenueNumeric(account['Revenue Estimate']) === maxRevenue ? 'highest' : 
+                          this.getRevenueNumeric(account['Revenue Estimate']) === minRevenue ? 'lowest' : '',
+                showBar: true,
+                percentage: (this.getRevenueNumeric(account['Revenue Estimate']) / maxRevenue) * 100
+            },
+            {
+                label: 'Employees',
+                value: account.Employees.toLocaleString(),
+                highlight: account.Employees === maxEmployees ? 'highest' : 
+                          account.Employees === minEmployees ? 'lowest' : '',
+                showBar: true,
+                percentage: (account.Employees / maxEmployees) * 100
+            },
+            {
+                label: 'Assigned To',
+                value: account['Assigned To'],
+                highlight: '',
+                showBar: false
+            },
+            {
+                label: 'Activity Level',
+                value: `${account.Activity}/10`,
+                highlight: '',
+                showBar: false
+            },
+            {
+                label: 'Head Office',
+                value: account['Head Office'],
+                highlight: '',
+                showBar: false
+            }
+        ];
+    }
+
+    getRevenueNumeric(revenueString) {
+        // Convert revenue string to number for comparison
+        if (revenueString.includes('$10 mil')) return 17.5;
+        if (revenueString.includes('$25 mil')) return 37.5;
+        if (revenueString.includes('$50 mil')) return 75;
+        if (revenueString.includes('$100 mil')) return 175;
+        if (revenueString.includes('$250 mil')) return 375;
+        return 0;
+    }
+
+    determineWinner(account, allAccounts) {
+        // Simple scoring algorithm - highest prospect score wins
+        const scores = allAccounts.map(acc => acc['Prospect Score']);
+        const maxScore = Math.max(...scores);
+        return account['Prospect Score'] === maxScore;
+    }
+
+    generateInsights(accounts) {
+        const insights = [];
+        
+        // Find highest prospect score
+        const scores = accounts.map(acc => ({ name: acc['Company Name'], score: acc['Prospect Score'] }));
+        const highest = scores.reduce((prev, current) => prev.score > current.score ? prev : current);
+        insights.push(`🎯 <strong>${highest.name}</strong> has the highest prospect score (${highest.score})`);
+        
+        // Find largest company
+        const employees = accounts.map(acc => ({ name: acc['Company Name'], employees: acc.Employees }));
+        const largest = employees.reduce((prev, current) => prev.employees > current.employees ? prev : current);
+        insights.push(`🏢 <strong>${largest.name}</strong> is the largest company (${largest.employees.toLocaleString()} employees)`);
+        
+        // Find highest revenue
+        const revenues = accounts.map(acc => ({ 
+            name: acc['Company Name'], 
+            revenue: acc['Revenue Estimate'],
+            numeric: this.getRevenueNumeric(acc['Revenue Estimate'])
+        }));
+        const richest = revenues.reduce((prev, current) => prev.numeric > current.numeric ? prev : current);
+        insights.push(`💰 <strong>${richest.name}</strong> offers the largest revenue opportunity (${richest.revenue})`);
+        
+        // Recommendation
+        if (highest.name === richest.name) {
+            insights.push(`🚀 <strong>Recommendation:</strong> Focus on ${highest.name} - highest score AND revenue potential`);
+        } else {
+            insights.push(`🚀 <strong>Recommendation:</strong> Consider ${highest.name} for quick wins, ${richest.name} for long-term value`);
+        }
+        
+        return insights;
+    }
+
+    removeFromComparison(accountIndex) {
+        const index = this.selectedForComparison.indexOf(accountIndex);
+        if (index !== -1) {
+            const accountName = this.filteredAccounts[accountIndex]['Company Name'];
+            this.selectedForComparison.splice(index, 1);
+            this.showToast(`Removed ${accountName} from comparison`, 'info');
+            
+            // Update button and re-render comparison if modal is open
+            this.updateComparisonButton();
+            
+            const modal = document.getElementById('comparisonModal');
+            if (modal.classList.contains('visible')) {
+                if (this.selectedForComparison.length >= 2) {
+                    document.getElementById('comparisonBody').innerHTML = this.renderComparisonView();
+                } else {
+                    this.closeComparison();
+                    this.showToast('Comparison closed - need at least 2 accounts', 'info');
+                }
+            }
+            
+            // Re-render table to update checkboxes
+            this.renderCurrentPage();
+        }
+    }
+
+    viewAccountDetails(accountIndex) {
+        // Switch to details tab and show account
+        const detailsTab = document.querySelector('[data-tab="details"]');
+        const accountSelector = document.getElementById('accountSelector');
+        
+        if (detailsTab && accountSelector) {
+            // Click details tab
+            detailsTab.click();
+            
+            // Set account selector
+            accountSelector.value = accountIndex;
+            accountSelector.dispatchEvent(new Event('change'));
+            
+            // Close comparison modal
+            this.closeComparison();
+            
+            this.showToast(`Viewing details for ${this.filteredAccounts[accountIndex]['Company Name']}`, 'info');
+        }
+    }
+
+    exportComparison() {
+        if (this.selectedForComparison.length < 2) {
+            this.showToast('No comparison to export', 'error');
+            return;
+        }
+
+        const selectedAccounts = this.selectedForComparison.map(index => this.filteredAccounts[index]);
+        
+        // Define columns for comparison export
+        const columns = [
+            'Company Name', 'Assigned To', 'Account Type', 'Prospect Score',
+            'Revenue Estimate', 'Employees', 'Head Office', 'Country', 
+            'Segmentation', 'Activity', 'Generation'
+        ];
+
+        // Create CSV content
+        const csvContent = [
+            columns.join(','), // Header row
+            ...selectedAccounts.map(account => 
+                columns.map(col => {
+                    let value = account[col];
+                    if (Array.isArray(value)) value = value.join('; ');
+                    value = String(value).replace(/"/g, '""');
+                    return `"${value}"`;
+                }).join(',')
+            )
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `account_comparison_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Exported comparison of ${selectedAccounts.length} accounts`, 'success');
     }
 }
 
