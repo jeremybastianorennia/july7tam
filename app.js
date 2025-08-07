@@ -957,16 +957,6 @@ class AccountDashboard {
                     <span class="metric" id="avgProspectScore">0</span>
                     <span class="subtitle">out of 100</span>
                 </div>
-                <div class="overview-card">
-                    <h3>Top Performer</h3>
-                    <span class="metric" id="topPerformer">-</span>
-                    <span class="subtitle">by account count</span>
-                </div>
-                <div class="overview-card">
-                    <h3>Revenue Pipeline</h3>
-                    <span class="metric" id="revenuePipeline">$0M</span>
-                    <span class="subtitle">estimated total</span>
-                </div>
             </div>
         `;
         
