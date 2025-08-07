@@ -98,6 +98,9 @@ class AccountDashboard {
         this.setupMultiSelectFilters();
         this.populateFilters();
         this.populateAccountSelector();
+        
+        // Show all accounts initially
+        this.applyFilters();
     }
 
     setupTabNavigation() {
