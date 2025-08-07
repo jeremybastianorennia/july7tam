@@ -1,4 +1,4 @@
-// ZoomInfo Account Dashboard JavaScript with Enhanced UX
+// ZoomInfo Account Dashboard JavaScript with Advanced Features
 class AccountDashboard {
     constructor() {
         this.accounts = [];
@@ -8,19 +8,172 @@ class AccountDashboard {
         this.isAuthenticated = false;
         this.selectedAssignedTo = [];
         this.selectedSegmentation = [];
+        this.currentTheme = localStorage.getItem('dashboardTheme') || 'auto';
         this.init();
     }
 
     init() {
         this.checkAuthentication();
         this.setupLoginEventListeners();
-        this.addCustomStyles(); // Add our enhanced styles
+        this.addCustomStyles();
+        this.initializeTheme();
     }
 
-    // Add custom styles for smooth transitions and interactive effects
+    // Initialize theme system
+    initializeTheme() {
+        this.applyTheme(this.currentTheme);
+    }
+
+    // Apply theme to document
+    applyTheme(theme) {
+        this.currentTheme = theme;
+        localStorage.setItem('dashboardTheme', theme);
+        
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-color-scheme', 'dark');
+        } else if (theme === 'light') {
+            document.documentElement.setAttribute('data-color-scheme', 'light');
+        } else {
+            document.documentElement.removeAttribute('data-color-scheme');
+        }
+    }
+
+    // Add custom styles for all enhanced features
     addCustomStyles() {
         const style = document.createElement('style');
         style.textContent = `
+            /* Theme toggle styles */
+            .theme-toggle {
+                position: relative;
+                background: var(--color-secondary);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-full);
+                padding: var(--space-4);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: var(--space-8);
+                font-size: var(--font-size-sm);
+            }
+            
+            .theme-toggle:hover {
+                background: var(--color-secondary-hover);
+            }
+            
+            .theme-icon {
+                font-size: var(--font-size-base);
+                transition: transform 0.2s ease;
+            }
+            
+            .theme-toggle:hover .theme-icon {
+                transform: scale(1.1);
+            }
+
+            /* Overview cards */
+            .overview-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: var(--space-16);
+                margin-bottom: var(--space-32);
+            }
+            
+            .overview-card {
+                background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg-1) 100%);
+                border: 1px solid var(--color-card-border);
+                border-radius: var(--radius-lg);
+                padding: var(--space-20);
+                text-align: center;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            
+            .overview-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+            
+            .overview-card h3 {
+                font-size: var(--font-size-lg);
+                margin-bottom: var(--space-8);
+                color: var(--color-text);
+            }
+            
+            .overview-card .metric {
+                font-size: var(--font-size-3xl);
+                font-weight: var(--font-weight-bold);
+                color: var(--color-primary);
+                margin-bottom: var(--space-4);
+                display: block;
+            }
+            
+            .overview-card .subtitle {
+                font-size: var(--font-size-sm);
+                color: var(--color-text-secondary);
+            }
+
+            /* Search autocomplete */
+            .search-container {
+                position: relative;
+                width: 100%;
+            }
+            
+            .autocomplete-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-top: none;
+                border-radius: 0 0 var(--radius-base) var(--radius-base);
+                box-shadow: var(--shadow-lg);
+                z-index: 1000;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            
+            .autocomplete-item {
+                padding: var(--space-12);
+                cursor: pointer;
+                transition: background-color 0.15s ease;
+                font-size: var(--font-size-sm);
+                border-bottom: 1px solid var(--color-border);
+            }
+            
+            .autocomplete-item:last-child {
+                border-bottom: none;
+            }
+            
+            .autocomplete-item:hover,
+            .autocomplete-item.selected {
+                background: var(--color-secondary);
+            }
+            
+            .autocomplete-item .category {
+                font-size: var(--font-size-xs);
+                color: var(--color-text-secondary);
+                margin-left: var(--space-8);
+            }
+
+            /* Export button */
+            .export-button {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--space-8);
+            }
+            
+            .export-button .icon {
+                font-size: var(--font-size-base);
+            }
+
+            /* Header improvements */
+            .header-controls {
+                display: flex;
+                align-items: center;
+                gap: var(--space-16);
+                margin-top: var(--space-16);
+            }
+
             /* Smooth page transitions - Fix login positioning */
             #loginScreen {
                 position: fixed !important;
@@ -227,8 +380,308 @@ class AccountDashboard {
                 50% { background-color: rgba(var(--color-success-rgb, 33, 128, 141), 0.2); }
                 100% { background-color: transparent; }
             }
+
+            /* Mobile responsiveness */
+            @media (max-width: 768px) {
+                .overview-cards {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: var(--space-12);
+                }
+                
+                .overview-card {
+                    padding: var(--space-16);
+                }
+                
+                .overview-card .metric {
+                    font-size: var(--font-size-2xl);
+                }
+                
+                .header-controls {
+                    flex-direction: column;
+                    gap: var(--space-12);
+                }
+            }
         `;
         document.head.appendChild(style);
+    }
+
+    // Create dashboard overview cards
+    createOverviewCards() {
+        const overviewSection = document.createElement('section');
+        overviewSection.className = 'overview-section';
+        overviewSection.innerHTML = `
+            <h2>Dashboard Overview</h2>
+            <div class="overview-cards" id="overviewCards">
+                <div class="overview-card">
+                    <h3>Total Accounts</h3>
+                    <span class="metric" id="totalAccounts">0</span>
+                    <span class="subtitle">in current view</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Avg Prospect Score</h3>
+                    <span class="metric" id="avgProspectScore">0</span>
+                    <span class="subtitle">out of 100</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Top Performer</h3>
+                    <span class="metric" id="topPerformer">-</span>
+                    <span class="subtitle">by account count</span>
+                </div>
+                <div class="overview-card">
+                    <h3>Revenue Pipeline</h3>
+                    <span class="metric" id="revenuePipeline">$0M</span>
+                    <span class="subtitle">estimated total</span>
+                </div>
+            </div>
+        `;
+        
+        // Insert before the tab container
+        const tabContainer = document.querySelector('.tab-container');
+        if (tabContainer) {
+            tabContainer.parentNode.insertBefore(overviewSection, tabContainer);
+        }
+    }
+
+    // Update overview cards with current data
+    updateOverviewCards() {
+        if (!this.filteredAccounts.length) return;
+
+        // Total accounts
+        document.getElementById('totalAccounts').textContent = this.filteredAccounts.length;
+
+        // Average prospect score
+        const avgScore = Math.round(
+            this.filteredAccounts.reduce((sum, acc) => sum + acc['Prospect Score'], 0) / this.filteredAccounts.length
+        );
+        document.getElementById('avgProspectScore').textContent = avgScore;
+
+        // Top performer by account count
+        const assigneeCounts = {};
+        this.filteredAccounts.forEach(acc => {
+            assigneeCounts[acc['Assigned To']] = (assigneeCounts[acc['Assigned To']] || 0) + 1;
+        });
+        const topPerformer = Object.keys(assigneeCounts).reduce((a, b) => 
+            assigneeCounts[a] > assigneeCounts[b] ? a : b
+        );
+        document.getElementById('topPerformer').textContent = topPerformer;
+
+        // Revenue pipeline (simplified calculation)
+        const totalRevenue = this.filteredAccounts.reduce((sum, acc) => {
+            const revenue = acc['Revenue Estimate'];
+            let value = 0;
+            if (revenue.includes('$10 mil')) value = 17.5; // midpoint of 10-25
+            else if (revenue.includes('$25 mil')) value = 37.5; // midpoint of 25-50
+            else if (revenue.includes('$50 mil')) value = 75; // midpoint of 50-100
+            else if (revenue.includes('$100 mil')) value = 175; // midpoint of 100-250
+            else if (revenue.includes('$250 mil')) value = 375; // midpoint of 250-500
+            return sum + value;
+        }, 0);
+        document.getElementById('revenuePipeline').textContent = `$${Math.round(totalRevenue)}M`;
+    }
+
+    // Add theme toggle to header
+    addThemeToggle() {
+        const header = document.querySelector('.header .container');
+        if (header) {
+            const controls = document.createElement('div');
+            controls.className = 'header-controls';
+            controls.innerHTML = `
+                <button class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">🌓</span>
+                    <span class="theme-text">Theme</span>
+                </button>
+            `;
+            header.appendChild(controls);
+
+            // Add event listener
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                this.toggleTheme();
+            });
+        }
+    }
+
+    // Toggle between themes
+    toggleTheme() {
+        const themes = ['auto', 'light', 'dark'];
+        const currentIndex = themes.indexOf(this.currentTheme);
+        const nextTheme = themes[(currentIndex + 1) % themes.length];
+        
+        this.applyTheme(nextTheme);
+        this.updateThemeToggleText();
+        this.showToast(`Switched to ${nextTheme} theme`, 'info');
+    }
+
+    // Update theme toggle button text
+    updateThemeToggleText() {
+        const themeText = document.querySelector('.theme-text');
+        if (themeText) {
+            const icons = { auto: '🌓', light: '☀️', dark: '🌙' };
+            const names = { auto: 'Auto', light: 'Light', dark: 'Dark' };
+            
+            document.querySelector('.theme-icon').textContent = icons[this.currentTheme];
+            themeText.textContent = names[this.currentTheme];
+        }
+    }
+
+    // Setup search autocomplete
+    setupSearchAutocomplete() {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) return;
+
+        // Wrap search input in container
+        const container = document.createElement('div');
+        container.className = 'search-container';
+        searchInput.parentNode.insertBefore(container, searchInput);
+        container.appendChild(searchInput);
+
+        // Create autocomplete dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'autocomplete-dropdown hidden';
+        dropdown.id = 'autocompleteDropdown';
+        container.appendChild(dropdown);
+
+        // Build suggestions from data
+        this.searchSuggestions = [
+            ...new Set([
+                ...this.accounts.map(acc => ({ value: acc['Company Name'], category: 'Company' })),
+                ...this.accounts.map(acc => ({ value: acc['Assigned To'], category: 'Team Member' })),
+                ...this.accounts.map(acc => ({ value: acc.Country, category: 'Country' })),
+                ...this.accounts.map(acc => ({ value: acc.Segmentation, category: 'Segment' })),
+                ...this.accounts.map(acc => ({ value: acc['Account Type'], category: 'Type' }))
+            ].map(item => JSON.stringify(item)))
+        ].map(item => JSON.parse(item));
+
+        let selectedIndex = -1;
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            const matches = this.searchSuggestions
+                .filter(item => item.value.toLowerCase().includes(query))
+                .slice(0, 8);
+
+            if (matches.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = matches.map((item, index) => `
+                <div class="autocomplete-item" data-index="${index}" data-value="${item.value}">
+                    ${item.value}
+                    <span class="category">${item.category}</span>
+                </div>
+            `).join('');
+
+            dropdown.classList.remove('hidden');
+            selectedIndex = -1;
+
+            // Add click handlers
+            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    searchInput.value = item.dataset.value;
+                    dropdown.classList.add('hidden');
+                    this.applyFilters();
+                });
+            });
+        });
+
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                this.updateAutocompleteSelection(items, selectedIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                this.updateAutocompleteSelection(items, selectedIndex);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                searchInput.value = items[selectedIndex].dataset.value;
+                dropdown.classList.add('hidden');
+                this.applyFilters();
+            } else if (e.key === 'Escape') {
+                dropdown.classList.add('hidden');
+                selectedIndex = -1;
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    updateAutocompleteSelection(items, selectedIndex) {
+        items.forEach((item, index) => {
+            item.classList.toggle('selected', index === selectedIndex);
+        });
+    }
+
+    // Export to CSV functionality
+    exportToCSV() {
+        if (!this.filteredAccounts.length) {
+            this.showToast('No data to export', 'error');
+            return;
+        }
+
+        // Define columns to export
+        const columns = [
+            'Company Name', 'Assigned To', 'Account Type', 'Prospect Score',
+            'Website', 'Revenue Estimate', 'Employees', 'Head Office', 
+            'Country', 'Segmentation', 'Drop Notes'
+        ];
+
+        // Create CSV content
+        const csvContent = [
+            columns.join(','), // Header row
+            ...this.filteredAccounts.map(account => 
+                columns.map(col => {
+                    let value = account[col];
+                    if (Array.isArray(value)) value = value.join('; ');
+                    // Escape commas and quotes
+                    value = String(value).replace(/"/g, '""');
+                    return `"${value}"`;
+                }).join(',')
+            )
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `accounts_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Exported ${this.filteredAccounts.length} accounts to CSV`, 'success');
+    }
+
+    // Add export button to results section
+    addExportButton() {
+        const resultsHeader = document.querySelector('.results-header');
+        if (resultsHeader) {
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'btn btn--outline export-button';
+            exportBtn.innerHTML = `
+                <span class="icon">📊</span>
+                Export CSV
+            `;
+            exportBtn.addEventListener('click', () => this.exportToCSV());
+            resultsHeader.appendChild(exportBtn);
+        }
     }
 
     // Toast notification system
@@ -362,8 +815,15 @@ class AccountDashboard {
         this.populateFilters();
         this.populateAccountSelector();
         
+        // Add new features
+        this.createOverviewCards();
+        this.addThemeToggle();
+        this.addExportButton();
+        this.updateThemeToggleText();
+        
         // Show all accounts initially
         setTimeout(() => {
+            this.setupSearchAutocomplete();
             this.applyFilters();
         }, 500); // Delay to let transition complete
     }
@@ -701,6 +1161,7 @@ class AccountDashboard {
         setTimeout(() => {
             this.updateTable();
             this.updateResultsCount();
+            this.updateOverviewCards();
             this.showLoadingIndicator(false);
         }, 200);
     }
@@ -861,22 +1322,6 @@ class AccountDashboard {
         detailsContent.classList.remove('hidden');
     }
 
-    updateScoreBar(barId, valueId, score, maxValue) {
-        const bar = document.getElementById(barId);
-        const valueSpan = document.getElementById(valueId);
-
-        if (bar && valueSpan) {
-            const percentage = (score / maxValue) * 100;
-            
-            // Reset bar to start animation from 0
-            bar.style.width = '0%';
-            valueSpan.textContent = '0';
-            
-            // Animate both the bar width and number counting
-            this.animateScoreBar(bar, valueSpan, percentage, score);
-        }
-    }
-
     // Smooth animation for score bars
     animateScoreBar(barElement, valueElement, targetPercentage, targetValue) {
         const duration = 1500; // 1.5 seconds
@@ -915,6 +1360,22 @@ class AccountDashboard {
         };
         
         requestAnimationFrame(animate);
+    }
+
+    updateScoreBar(barId, valueId, score, maxValue) {
+        const bar = document.getElementById(barId);
+        const valueSpan = document.getElementById(valueId);
+
+        if (bar && valueSpan) {
+            const percentage = (score / maxValue) * 100;
+            
+            // Reset bar to start animation from 0
+            bar.style.width = '0%';
+            valueSpan.textContent = '0';
+            
+            // Animate both the bar width and number counting
+            this.animateScoreBar(bar, valueSpan, percentage, score);
+        }
     }
 }
 
